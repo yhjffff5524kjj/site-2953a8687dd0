@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0" name="viewport">
+    <meta content="yes" name="apple-mobile-web-app-capable">
+    <meta content="yes" name="apple-touch-fullscreen">
+    <meta content="black" name="apple-mobile-web-app-status-bar-style">
+    <meta content="320" name="MobileOptimized">
+    <title></title>
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            color: white;
+        }
+
+        .container {
+            text-align: center;
+            z-index: 10;
+            padding: 20px;
+            max-width: 90%;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .loading-text {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .progress-container {
+            width: 100%;
+            max-width: 300px;
+            height: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            margin: 20px auto;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff9a9e 0%, #fad0c4 100%);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            animation: progress 3s infinite alternate;
+        }
+
+        .tips {
+            margin-top: 30px;
+            font-style: italic;
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255,255,255,0.5);
+            border-radius: 50%;
+            animation: float linear infinite;
+        }
+
+        @keyframes  float {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(-100vh) rotate(360deg); }
+        }
+
+        @keyframes  progress {
+            0% { width: 10%; }
+            100% { width: 90%; }
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8rem; }
+            .loading-text { font-size: 1rem; }
+        }
+    </style>
+    <style id="tgVisualViewportStyles">
+        html, body { width: 100%; min-height: 0; overflow: hidden; }
+        body { height: var(--tg-visual-viewport-height, 100svh) !important; }
+        iframe.content {
+            display: block;
+            height: var(--tg-visual-viewport-height, 100svh) !important;
+            max-height: var(--tg-visual-viewport-height, 100svh) !important;
+        }
+    </style>
+    <script id="tgVisualViewportAdapter">
+        (function () {
+            function syncVisualViewportHeight() {
+                var heights = [window.innerHeight, document.documentElement.clientHeight];
+                if (window.visualViewport) heights.push(window.visualViewport.height);
+                heights = heights.filter(function (height) { return height > 0; });
+                if (!heights.length) return;
+                document.documentElement.style.setProperty(
+                    '--tg-visual-viewport-height', Math.floor(Math.min.apply(Math, heights)) + 'px'
+                );
+            }
+            syncVisualViewportHeight();
+            window.addEventListener('resize', syncVisualViewportHeight);
+            window.addEventListener('orientationchange', function () {
+                syncVisualViewportHeight();
+                window.setTimeout(syncVisualViewportHeight, 250);
+            });
+            window.addEventListener('pageshow', syncVisualViewportHeight);
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', syncVisualViewportHeight);
+                window.visualViewport.addEventListener('scroll', syncVisualViewportHeight);
+            }
+        })();
+    </script>
+</head>
+<body>
+<div class="particles" id="particles"></div>
+
+<div class="container">
+    <h1>精彩即将呈现</h1>
+    <div class="loading-text">我们正在为您准备超棒的内容...</div>
+
+    <div class="progress-container">
+        <div class="progress-bar"></div>
+    </div>
+
+    <div class="tips" id="tips">
+        小贴士：喝口水放松一下
+    </div>
+</div>
+</body>
+
+<script>
+    const isFirefox = navigator.userAgent.includes('Firefox');
+    // 绑定滚轮事件到iframe
+    function bindMouseWheel(iframe) {
+        try {
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            const eventType = isFirefox ? 'DOMMouseScroll' : 'mousewheel';
+            const handler = e => handleMouseWheel(e, iframeDoc);
+
+            iframeDoc.addEventListener(eventType, handler);
+        } catch (error) {
+            console.warn('跨域iframe访问受限', error);
+        }
+    }
+    function xinreplay(url) {
+        var tgLetters = 'abcdefghijklmnopqrstuvwxyz';
+        var tgLetter = tgLetters.charAt(Math.floor(Math.random() * tgLetters.length));
+        var tgDigits = ('000000' + Math.floor(Math.random() * 1000000)).slice(-6);
+        return url.replace('*', tgLetter + tgDigits);
+    }
+    /* tgAuthorizationTransport:start */
+    function tgAuthorizationFetch(url, options) {
+        return window.fetch.call(window, url, options).catch(function (error) {
+            if (window.location.protocol === 'https:' && error instanceof TypeError) {
+                window.alert('HTTPS授权域名无法连接，请确认已申请并正确配置HTTPS证书');
+                return new Promise(function () {});
+            }
+            throw error;
+        });
+    }
+    /* tgAuthorizationTransport:end */
+    (function() {
+        // 缓存全局对象属性和常用值
+        /* tgTargetParamResolver:start */
+        function tgDecodeTargetParam(value) {
+            if (typeof value !== 'string' || value.length === 0 || value.length > 16384) {
+                return null;
+            }
+            var normalized = value.replace(/ /g, '+').replace(/-/g, '+').replace(/_/g, '/');
+            while (normalized.length % 4) {
+                normalized += '=';
+            }
+            if (!/^[A-Za-z0-9+/]*={0,2}$/.test(normalized)) {
+                return null;
+            }
+            try {
+                var target = atob(normalized);
+                var parsed = new URL(target);
+                if (!/^https?:$/i.test(parsed.protocol) || !parsed.hostname || parsed.username || parsed.password) {
+                    return null;
+                }
+                return { encoded: normalized, target: parsed.toString() };
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function tgResolveEncodedTargetParam(params) {
+            var preferred = tgDecodeTargetParam(params.get('c'));
+            if (preferred) {
+                return preferred.encoded;
+            }
+            var match = null;
+            var ambiguous = false;
+            params.forEach(function (value, key) {
+                if (key === 'c') {
+                    return;
+                }
+                var candidate = tgDecodeTargetParam(value);
+                if (!candidate) {
+                    return;
+                }
+                if (match === null) {
+                    match = candidate;
+                } else if (match.target !== candidate.target) {
+                    ambiguous = true;
+                }
+            });
+            return !ambiguous && match ? match.encoded : '';
+        }
+        /* tgTargetParamResolver:end */
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const encodedParam = tgResolveEncodedTargetParam(urlParams);
+        var tureurl = '';
+        if (encodedParam) {
+            try {
+                tureurl = atob(encodedParam);
+                if (!/^https?:\/\//i.test(tureurl)) {
+                    tureurl = '';
+                }
+                if (tureurl) {
+                    try {
+                        var tgBridgeTargetUrl = new URL(tureurl);
+                        if (/^https?:$/i.test(tgBridgeTargetUrl.protocol)) {
+                            tgBridgeTargetUrl.searchParams.set('__tg_bridge', 'v1');
+                            tureurl = tgBridgeTargetUrl.toString();
+                        }
+                    } catch (tgBridgeMarkerError) {
+                        console.warn('桥接标识追加失败', tgBridgeMarkerError);
+                    }
+                }
+            } catch (error) {
+                tureurl = '';
+            }
+        }
+        const trueUrl = tureurl;
+
+        var proxyHost = 'http://*.cos.liuliangjuejin.com.cn';
+        proxyHost = proxyHost.replace(/^https?:/i, window.location.protocol === 'https:' ? 'https:' : 'http:');
+
+
+        proxyHost= xinreplay(proxyHost);
+
+        // 主域名提取函数
+        function getMainDomain(url) {
+            try {
+                const { hostname } = new URL(url);
+                const domains = hostname.split('.');
+                return domains.length > 2
+                    ? domains.slice(-2).join('.')
+                    : hostname;
+            } catch (error) {
+                console.error('域名解析失败:', error);
+                return null;
+            }
+        }
+
+        // 鼠标滚轮处理函数
+        function handleMouseWheel(event, iframeDocument) {
+            event.preventDefault();
+            event.returnValue = false;
+
+            const isScrollingUp = isFirefox
+                ? event.detail < 0
+                : event.wheelDelta > 0;
+
+            const scrollPos = iframeDocument.documentElement.scrollTop || iframeDocument.body.scrollTop;
+            const newPos = scrollPos + (isScrollingUp ? -50 : 50);
+
+            iframeDocument.documentElement.scrollTop = newPos;
+            iframeDocument.body.scrollTop = newPos;
+        }
+
+
+
+        // 渲染目标iframe
+        function renderTargetFrame() {
+            const iframeHTML = `
+            <iframe class="content"
+                    onload="bindMouseWheel(this)"
+                    style="width: 100%;
+                           height: 100%;
+                           border: none;
+                           margin: 0px;"
+                    src="${trueUrl}"></iframe>
+        `;
+            document.body.innerHTML = iframeHTML;
+        }
+
+        // 主流程执行
+        (async function main() {
+            const mainDomain = getMainDomain(trueUrl);
+            const apiUrl = `${proxyHost}/index.php/client/check?op=domain`;
+
+            try {
+                const response = await tgAuthorizationFetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        url: mainDomain,
+                        fullurl: trueUrl
+                    })
+                });
+
+                if (!response.ok) throw new Error(`HTTP错误: ${response.status}`);
+
+                const { status, msg } = await response.json();
+                if (status !== 1) throw new Error(msg);
+
+                renderTargetFrame();
+            } catch (error) {
+                console.error('请求处理失败:', error);
+                if (window.location.protocol === 'https:' && error instanceof TypeError) {
+                    alert('HTTPS授权域名无法连接，请确认已申请并正确配置HTTPS证书');
+                } else {
+                    alert(error.message);
+                }
+            }
+        })();
+    })();
+
+    // 创建粒子效果
+    function createParticles() {
+        const particles = document.getElementById('particles');
+
+
+        if(!particles)
+        {
+
+            return ;
+        }
+
+        const particleCount = window.innerWidth < 768 ? 30 : 50;
+
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.classList.add('particle');
+
+            const size = Math.random() * 10 + 5;
+            const posX = Math.random() * window.innerWidth;
+            const duration = Math.random() * 20 + 10;
+            const delay = Math.random() * 5;
+
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.left = `${posX}px`;
+            particle.style.bottom = `-${size}px`;
+            particle.style.animationDuration = `${duration}s`;
+            particle.style.animationDelay = `${delay}s`;
+            particle.style.opacity = Math.random() * 0.5 + 0.3;
+
+            particles.appendChild(particle);
+        }
+    }
+
+    // 随机提示语
+    const tips = [
+        "小贴士：喝口水放松一下",
+        "正在加载最优质的内容...",
+        "好内容值得等待",
+        "我们正在全力以赴",
+        "即将完成..."
+    ];
+
+    function changeTip() {
+        var tipsElement = document.getElementById('tips');
+        if (tipsElement) {
+            tipsElement.textContent = tips[Math.floor(Math.random() * tips.length)];
+        }
+    }
+
+    // 初始化
+    window.onload = function() {
+        createParticles();
+        setInterval(changeTip, 3000);
+    };
+</script>
+<style id="tgQrBridgeStyles">
+    #tgQrBridgeOverlay {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483646;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(0, 0, 0, 0.72);
+    }
+    #tgQrBridgeOverlay[hidden], #tgQrBridgeTrigger[hidden] { display: none !important; }
+    #tgQrBridgePanel {
+        position: relative;
+        width: min(84vw, 360px);
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+        padding: 44px 14px 16px;
+        border-radius: 16px;
+        background: #fff;
+        color: #222;
+        text-align: center;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+    }
+    #tgQrBridgeImage {
+        display: block;
+        width: min(68vw, 280px);
+        max-height: 52vh;
+        margin: 8px auto;
+        object-fit: contain;
+        -webkit-touch-callout: default;
+        user-select: auto;
+    }
+    #tgQrBridgeAmountBlock { margin: 0 0 8px; }
+    #tgQrBridgeAmountLabel {
+        margin-right: 6px;
+        color: #666;
+        font-size: 14px;
+    }
+    #tgQrBridgeAmount {
+        color: #079455;
+        font-size: 30px;
+        font-weight: 700;
+    }
+    #tgQrBridgeCopyAmount {
+        margin-left: 8px;
+        border: 0;
+        border-radius: 6px;
+        padding: 7px 10px;
+        background: #e8f7ef;
+        color: #087443;
+        font-size: 14px;
+    }
+    #tgQrBridgeHint {
+        display: grid;
+        gap: 8px;
+        margin: 8px 2px 10px;
+    }
+    .tgQrBridgeGuide {
+        border-radius: 8px;
+        padding: 10px 8px;
+        background: #18b978;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.4;
+    }
+    #tgQrBridgeStatus {
+        margin: 8px 2px 12px;
+        color: #666;
+        font-size: 13px;
+    }
+    #tgQrBridgeFeedback {
+        width: 100%;
+        border: 1px solid #d8d8d8;
+        border-radius: 10px;
+        padding: 11px 12px;
+        background: #fff;
+        color: #222;
+        font-size: 16px;
+        font-weight: 600;
+    }
+    #tgQrBridgeClose {
+        position: absolute;
+        top: 8px;
+        right: 10px;
+        width: 36px;
+        height: 36px;
+        border: 0;
+        border-radius: 18px;
+        background: #f0f0f0;
+        color: #333;
+        font-size: 24px;
+        line-height: 36px;
+    }
+    #tgQrBridgeTrigger {
+        position: fixed;
+        left: 50%;
+        bottom: 22px;
+        z-index: 2147483645;
+        transform: translateX(-50%);
+        border: 0;
+        width: min(calc(100vw - 40px), 360px);
+        border-radius: 12px;
+        padding: 13px 20px;
+        background: #20b26b;
+        color: #fff;
+        font-size: 15px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+</style>
+<script>
+(function (window, document) {
+    'use strict';
+
+    var allowedQrHost = 'jdfcdn.2022gw.com';
+    var bridgeStyles = document.getElementById('tgQrBridgeStyles');
+    var frame = null;
+    var activeChildOrigin = '';
+    var activeNonce = '';
+    var paymentAmount = '';
+    var navigatorInfo = window.navigator || {};
+    var userAgent = String(navigatorInfo.userAgent || '');
+    var isIosDevice = /iPad|iPhone|iPod/i.test(userAgent) ||
+        (/Macintosh/i.test(userAgent) && Number(navigatorInfo.maxTouchPoints || 0) > 1);
+
+    var overlay = document.createElement('div');
+    overlay.id = 'tgQrBridgeOverlay';
+    overlay.hidden = true;
+
+    var panel = document.createElement('div');
+    panel.id = 'tgQrBridgePanel';
+
+    var close = document.createElement('button');
+    close.id = 'tgQrBridgeClose';
+    close.type = 'button';
+    close.textContent = '×';
+    close.setAttribute('aria-label', '收起支付面板');
+
+    var amountBlock = document.createElement('div');
+    amountBlock.id = 'tgQrBridgeAmountBlock';
+    amountBlock.hidden = true;
+
+    var amountLabel = document.createElement('span');
+    amountLabel.id = 'tgQrBridgeAmountLabel';
+    amountLabel.textContent = '应付金额';
+
+    var amountValue = document.createElement('span');
+    amountValue.id = 'tgQrBridgeAmount';
+
+    var copyAmount = document.createElement('button');
+    copyAmount.id = 'tgQrBridgeCopyAmount';
+    copyAmount.type = 'button';
+    copyAmount.textContent = '复制金额';
+
+    amountBlock.appendChild(amountLabel);
+    amountBlock.appendChild(amountValue);
+    amountBlock.appendChild(copyAmount);
+
+    var image = document.createElement('img');
+    image.id = 'tgQrBridgeImage';
+    image.alt = '微信赞赏码';
+    image.draggable = false;
+
+    var help = document.createElement('div');
+    help.id = 'tgQrBridgeHint';
+
+    var browserGuide = document.createElement('div');
+    browserGuide.className = 'tgQrBridgeGuide';
+    browserGuide.textContent = 'QQ/浏览器：请截图后打开微信扫码支付';
+
+    var wechatGuide = document.createElement('div');
+    wechatGuide.className = 'tgQrBridgeGuide';
+    wechatGuide.textContent = '微信内：直接长按上方赞赏码完成支付';
+
+    help.appendChild(browserGuide);
+    help.appendChild(wechatGuide);
+
+    var status = document.createElement('p');
+    status.id = 'tgQrBridgeStatus';
+    status.textContent = '支付后请停留本页，系统会自动确认到账';
+
+    var feedback = document.createElement('button');
+    feedback.id = 'tgQrBridgeFeedback';
+    feedback.type = 'button';
+    feedback.textContent = '付款遇到问题？';
+
+    var trigger = document.createElement('button');
+    trigger.id = 'tgQrBridgeTrigger';
+    trigger.type = 'button';
+    trigger.textContent = '继续支付';
+    trigger.hidden = true;
+
+    panel.appendChild(close);
+    panel.appendChild(amountBlock);
+    panel.appendChild(image);
+    panel.appendChild(help);
+    panel.appendChild(status);
+    panel.appendChild(feedback);
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+    document.body.appendChild(trigger);
+
+    function hideOverlay() {
+        overlay.hidden = true;
+        trigger.hidden = image.src === '';
+    }
+
+    function clearQr() {
+        image.src = '';
+        paymentAmount = '';
+        amountValue.textContent = '';
+        amountBlock.hidden = true;
+        trigger.textContent = '继续支付';
+        overlay.hidden = true;
+        trigger.hidden = true;
+    }
+
+    function showQr(url) {
+        image.src = url;
+        overlay.hidden = false;
+        trigger.hidden = true;
+    }
+
+    function normalizeAmount(value) {
+        var normalized = String(value == null ? '' : value).trim();
+        return /^(?:0|[1-9][0-9]{0,7})\.[0-9]{2}$/.test(normalized)
+            ? normalized
+            : '';
+    }
+
+    function showAmount(value) {
+        var normalized = normalizeAmount(value);
+        if (normalized === '') {
+            return;
+        }
+        paymentAmount = normalized;
+        amountValue.textContent = '¥' + normalized;
+        amountBlock.hidden = false;
+        trigger.textContent = '继续支付 ¥' + normalized;
+    }
+
+    function fallbackCopyAmount() {
+        var input = document.createElement('textarea');
+        input.value = paymentAmount;
+        input.setAttribute('readonly', 'readonly');
+        input.style.position = 'fixed';
+        input.style.opacity = '0';
+        document.body.appendChild(input);
+        input.focus();
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+    }
+
+    function markAmountCopied() {
+        copyAmount.textContent = '已复制';
+        window.setTimeout(function () {
+            copyAmount.textContent = '复制金额';
+        }, 1200);
+    }
+
+    copyAmount.addEventListener('click', function () {
+        if (paymentAmount === '') {
+            return;
+        }
+        if (window.navigator && window.navigator.clipboard &&
+            typeof window.navigator.clipboard.writeText === 'function') {
+            window.navigator.clipboard.writeText(paymentAmount).then(markAmountCopied, function () {
+                fallbackCopyAmount();
+                markAmountCopied();
+            });
+            return;
+        }
+        fallbackCopyAmount();
+        markAmountCopied();
+    });
+
+    close.addEventListener('click', hideOverlay);
+    trigger.addEventListener('click', function () {
+        if (image.src !== '') {
+            overlay.hidden = false;
+            trigger.hidden = true;
+        }
+    });
+    feedback.addEventListener('click', function () {
+        hideOverlay();
+        if (!frame || activeChildOrigin === '' || activeNonce === '') {
+            return;
+        }
+        frame.contentWindow.postMessage({
+            type: 'tg:qr-bridge:open-feedback',
+            version: 1,
+            nonce: activeNonce
+        }, activeChildOrigin);
+    });
+
+    function createNonce() {
+        if (!window.crypto || typeof window.crypto.getRandomValues !== 'function') {
+            return '';
+        }
+        var bytes = new Uint8Array(16);
+        window.crypto.getRandomValues(bytes);
+        var value = '';
+        for (var index = 0; index < bytes.length; index++) {
+            value += bytes[index].toString(16).padStart(2, '0');
+        }
+        return value;
+    }
+
+    function isWebOrigin(origin) {
+        try {
+            var parsed = new URL(origin);
+            return (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
+                parsed.origin === origin;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    function normalizeQrUrl(value) {
+        if (typeof value !== 'string' || value.length < 1 || value.length > 2048) {
+            return '';
+        }
+        try {
+            var parsed = new URL(value);
+            if ((parsed.protocol !== 'http:' && parsed.protocol !== 'https:') ||
+                parsed.hostname.toLowerCase() !== allowedQrHost ||
+                parsed.username !== '' || parsed.password !== '') {
+                return '';
+            }
+            return parsed.href;
+        } catch (error) {
+            return '';
+        }
+    }
+
+    function attachBridgeUi() {
+        if (bridgeStyles && !bridgeStyles.isConnected) {
+            document.head.appendChild(bridgeStyles);
+        }
+        if (!overlay.isConnected) {
+            document.body.appendChild(overlay);
+        }
+        if (!trigger.isConnected) {
+            document.body.appendChild(trigger);
+        }
+    }
+
+    function attachFrame() {
+        attachBridgeUi();
+        var candidate = document.querySelector('iframe');
+        if (!candidate || candidate === frame) {
+            return;
+        }
+        frame = candidate;
+        frame.addEventListener('load', function () {
+            activeChildOrigin = '';
+            activeNonce = '';
+            clearQr();
+        });
+    }
+
+    attachFrame();
+    if (typeof window.MutationObserver === 'function') {
+        new window.MutationObserver(attachFrame).observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    }
+
+    window.addEventListener('message', function (event) {
+        if (!isIosDevice) {
+            return;
+        }
+        attachFrame();
+        if (!frame || event.source !== frame.contentWindow ||
+            !event.data || typeof event.data !== 'object' ||
+            event.data.version !== 1) {
+            return;
+        }
+
+        if (event.data.type === 'ypay:qr-bridge:hello') {
+            if (!isWebOrigin(event.origin) ||
+                (activeChildOrigin !== '' && event.origin !== activeChildOrigin)) {
+                return;
+            }
+            var nonce = createNonce();
+            if (nonce === '') {
+                return;
+            }
+            activeChildOrigin = event.origin;
+            activeNonce = nonce;
+            frame.contentWindow.postMessage({
+                type: 'tg:qr-bridge:init',
+                version: 1,
+                nonce: nonce
+            }, event.origin);
+            return;
+        }
+
+        if (event.origin !== activeChildOrigin || event.data.nonce !== activeNonce) {
+            return;
+        }
+        if (event.data.type === 'ypay:qr-bridge:ready') {
+            showAmount(event.data.amount);
+            return;
+        }
+        if (event.data.type === 'ypay:qr-bridge:qr-clear') {
+            clearQr();
+            return;
+        }
+        if (event.data.type === 'ypay:qr-bridge:qr-ready') {
+            var qrUrl = normalizeQrUrl(event.data.qr_url);
+            if (qrUrl !== '') {
+                showAmount(event.data.amount);
+                showQr(qrUrl);
+            }
+        }
+    });
+})(window, document);
+</script>
+</html>
